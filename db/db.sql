@@ -81,6 +81,7 @@ CREATE TABLE friends (
 
 CREATE TABLE comments (
 	id SERIAL PRIMARY KEY,
+	pid integer REFERENCES posts(id) NOT NULL,
 	visitor_name varchar(30) NOT NULL,
 	visitor_email varchar(50),
 	content varchar(1000) NOT NULL,
@@ -97,3 +98,11 @@ CREATE TABLE comments (
 	backup9 timestamp without time zone,
 	backup10 timestamp without time zone
 );
+
+CREATE INDEX  posts_id_index ON posts(id);
+
+CREATE INDEX  posts_pid_index ON posts(pid);
+
+CREATE INDEX  tags_pid_index ON tags(pid);
+
+CREATE INDEX  comments_pid_index ON comments(pid);

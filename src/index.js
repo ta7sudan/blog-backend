@@ -12,28 +12,31 @@ require('dotenv-safe').config({
 	example: '.env.example'
 });
 
-const Fastify = require('fastify');
+const Aloridal = require('./Aloridal');
 const helmet = require('fastify-helmet');
+const cors = require('fastify-cors');
 const path = require('path');
+const fs = require('fs');
 const logger = require('./lib/logger');
 const statusCode = require('./lib/http-status');
+// const registerErrorHandler = require('./lib/error-handler');
 
 
 // const registerErrorHandler = require('./lib/error-handler');
 
 // TODO
 // registerErrorHandler('unhandledRejection');
-// registerErrorHandler('uncaughtException');
+// registerErrorHandler('uncaughtException', {});
 // registerErrorHandler('SIGINT');
 // registerErrorHandler('SIGTERM');
 // registerErrorHandler('SIGQUIT');
 // registerErrorHandler('SIGHUP');
 
-const app = Fastify({
+const app = new Aloridal({
 	http2: JSON.parse(process.env.ENABLE_HTTP2 || 'false'),
 	https: process.env.TLS_KEY && process.env.TLS_CERT ? {
-		key: path.resolve(__dirname, '..', process.env.TLS_KEY),
-		cert: path.resolve(__dirname, '..', process.env.TLS_CERT)
+		key: fs.readFileSync(path.resolve(__dirname, '..', process.env.TLS_KEY)),
+		cert: fs.readFileSync(path.resolve(__dirname, '..', process.env.TLS_CERT))
 	} : null,
 	maxParamLength: parseInt(process.env.MAX_PARAM_LENGTH, 10) || 60,
 	bodyLimit: parseInt(process.env.BODY_LIMIT, 10) || 1048576,
@@ -85,6 +88,23 @@ app.setErrorHandler(async (err, req, res) => {
 	};
 });
 
+app.registerRoute(async ctx => {
+	ctx.register(cors, {
+		// 这里是硬编码了origin的值而不是根据请求动态响应,
+		// 讲道理这种情况是不应该返回Vary:Origin的, 而这个
+		// 插件默认会返回Vary:Origin, 总感觉这里会有坑...
+		// 如果遇到跨域导致的坑, 务必回来把这个插件换掉...
+		origin: process.env.CORS_ORIGIN,
+		methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+		allowedHeaders: ['AUTH', 'Content-Type'],
+		credentials: true,
+		maxAge: 7200
+	});
+}, {
+	prefix: `api/${process.env.API_VERSION || 'v1'}`,
+	logLevel: 'warn'
+});
+
 app.listen(
 	parseInt(process.env.APP_PORT, 10) || 3000,
 	process.env.APP_HOST || '127.0.0.1',
@@ -92,7 +112,10 @@ app.listen(
 	(err, address) => {
 		if (err) {
 			app.log.error(err);
-			process.exit(1);
+			// 这里return就好, 会自己退出的, 而如果
+			// 手动process.exit(1), 会导致pino文件还未
+			// 关闭就退出了
+			return;
 		}
-		app.log.info(`Server is running on ${address}`);
+		console.log(`Server is running on ${address}`);
 	});
