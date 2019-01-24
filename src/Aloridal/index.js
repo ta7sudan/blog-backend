@@ -121,10 +121,7 @@ function _registerRoute(namespace, ctx) {
 		if (namespace[k][Symbol.for('isNamespace')]) {
 			_registerRoute(namespace[k], ctx);
 		} else {
-			const routeOptions = namespace[k],
-				parts = k.trim().split(/\s+/),
-				method = parts[0],
-				path = parts[1];
+			const routeOptions = namespace[k], [method, path] = k.trim().split(/\s+/);
 			ctx[method](path, routeOptions);
 		}
 	});
@@ -133,19 +130,14 @@ function _registerRoute(namespace, ctx) {
 function registerRoute(...args) {
 	let namespace = null, fn = null, options = null;
 	for (const item of args) {
-		switch (typeof item) {
-			case 'string':
-				namespace = getNamespace(this.routeMap, item);
-				break;
-			case 'function':
-				fn = item;
-				break;
-			// 不管null
-			case 'object':
-				options = item;
-				break;
-			default:
-				break;
+		if (typeof item === 'string') {
+			namespace = getNamespace(this.routeMap, item);
+		} else if (Array.isArray(item)) {
+			namespace = item.map(n => getNamespace(this.routeMap, n));
+		} else if (isFn(item)) {
+			fn = item;
+		} else if (toString(item) === '[object Object]') {
+			options = item;
 		}
 	}
 	if (!namespace) {
@@ -160,7 +152,11 @@ function registerRoute(...args) {
 			}
 			// throw new Error(`registerRoute expected a function, but received ${fn}`);
 		}
-		_registerRoute(namespace, ctx);
+		if (Array.isArray(namespace)) {
+			namespace.forEach(n => _registerRoute(n, ctx));
+		} else {
+			_registerRoute(namespace, ctx);
+		}
 	}, options);
 }
 

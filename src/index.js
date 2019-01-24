@@ -15,6 +15,8 @@ require('dotenv-safe').config({
 const Aloridal = require('./Aloridal');
 const helmet = require('fastify-helmet');
 const cors = require('fastify-cors');
+const jwt = require('fastify-jwt');
+const cookie = require('fastify-cookie');
 const path = require('path');
 const fs = require('fs');
 const logger = require('./lib/logger');
@@ -62,6 +64,21 @@ app.register(helmet, {
 	}
 });
 
+app.register(jwt, {
+	secret: process.env.JWT_SECRET || 'todo',
+	sign: {
+		expiresIn: process.env.JWT_EXPIRES || '1h',
+		issuer: process.env.JWT_ISSUER || 'todo'
+	},
+	verify: {
+		maxAge: process.env.JWT_EXPIRES || '1h',
+		issuer: process.env.JWT_ISSUER || 'todo'
+	}
+});
+
+app.register(cookie);
+
+
 
 // Decorators
 app.decorateReply('statusCode', statusCode);
@@ -88,7 +105,14 @@ app.setErrorHandler(async (err, req, res) => {
 	};
 });
 
-app.registerRoute(async ctx => {
+if (process.env.NODE_ENV !== 'production') {
+	app.registerRoute('debug', {
+		prefix: `api/${process.env.API_VERSION || 'v1'}`,
+		logLevel: 'warn'
+	});
+}
+
+app.registerRoute(['home'], async ctx => {
 	ctx.register(cors, {
 		// 这里是硬编码了origin的值而不是根据请求动态响应,
 		// 讲道理这种情况是不应该返回Vary:Origin的, 而这个
@@ -96,9 +120,17 @@ app.registerRoute(async ctx => {
 		// 如果遇到跨域导致的坑, 务必回来把这个插件换掉...
 		origin: process.env.CORS_ORIGIN,
 		methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-		allowedHeaders: ['AUTH', 'Content-Type'],
+		allowedHeaders: ['Authorization', 'Content-Type'],
 		credentials: true,
 		maxAge: 7200
+	});
+
+	ctx.addHook('onRequest', async (req, res) => {
+		try {
+			await req.jwtVerify();
+		} catch (err) {
+			res.send(err);
+		}
 	});
 }, {
 	prefix: `api/${process.env.API_VERSION || 'v1'}`,
