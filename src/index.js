@@ -17,6 +17,9 @@ const helmet = require('fastify-helmet');
 const cors = require('fastify-cors');
 const jwt = require('fastify-jwt');
 const cookie = require('fastify-cookie');
+const redis = require('fastify-redis');
+const postgre = require('fastify-postgres');
+const rateLimit = require('fastify-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const logger = require('./lib/logger');
@@ -78,6 +81,38 @@ app.register(jwt, {
 
 app.register(cookie);
 
+app.register(redis, {
+	// port可以string
+	port: process.env.REDIS_PORT || 6379,
+	host: process.env.REDIS_HOST || 'localhost',
+	family: 4,
+	password: process.env.REDIS_PASS
+}).after(err => {
+	if (err) {
+		console.error(err);
+	} else {
+		console.log('Redis is connected.');
+	}
+});
+
+app.register(postgre, {
+	user: process.env.PGUSER,
+	password: process.env.PGPASSWORD,
+	database: process.env.PGDATABASE,
+	host: process.env.PGHOST || 'localhost',
+	port: parseInt(process.env.PGPORT, 10),
+	/* eslint-disable-next-line */
+	statement_timeout: parseInt(process.env.PGSTATTIMEOUT, 10),
+	connectionTimeoutMillis: parseInt(process.env.PGCONNTIMEOUT, 10),
+	max: parseInt(process.env.PGPOOLSIZE, 10) || 10
+}).after(err => {
+	if (err) {
+		console.error(err);
+	} else {
+		console.log('Postgre is connected.');
+	}
+});
+
 
 
 // Decorators
@@ -113,6 +148,12 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 app.registerRoute(['home'], async ctx => {
+	ctx.register(rateLimit, {
+		max: 100,
+		timeWindow: 60000,
+		cache: 1000,
+		redis: ctx.redis
+	});
 	ctx.register(cors, {
 		// 这里是硬编码了origin的值而不是根据请求动态响应,
 		// 讲道理这种情况是不应该返回Vary:Origin的, 而这个

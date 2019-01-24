@@ -2,7 +2,7 @@
 
 module.exports = ctx => ({
 	async getPosts() {
-		ctx.service.posts.test();
+		await ctx.service.posts.test();
 		return {
 			test: 'test'
 		};
