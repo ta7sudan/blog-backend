@@ -63,12 +63,14 @@
     "prettier": "^1.15.3"
   },
   "dependencies": {
+    "@sqorn/pg": "0.0.45",
     "dotenv-safe": "^6.1.0",
     "fastify": "^2.0.0-rc.4",
     "fastify-cookie": "^2.1.5",
     "fastify-cors": "^2.0.1",
     "fastify-helmet": "^3.0.0",
     "fastify-jwt": "^0.9.1",
+    "fastify-plugin": "^1.4.0",
     "fastify-postgres": "^1.3.2",
     "fastify-rate-limit": "^2.0.0",
     "fastify-redis": "^3.0.0",
