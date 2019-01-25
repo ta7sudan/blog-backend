@@ -8,6 +8,6 @@ module.exports = function registerHandler(event, { cleaner, logger } = {}) {
 		if (logger) {
 			logger.log(...args);
 		}
-		process.exit(1);
+		// process.exit(1);
 	});
 };

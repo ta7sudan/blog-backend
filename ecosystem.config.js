@@ -2,6 +2,8 @@
 /* eslint-disable */
 const path = require('path');
 
+// 先暂时用PM2, 到时候换到Pandora, 如果不是它不支持Windows...
+// 之后参考egg-cluster自己实现守护进程, 日志分割以及平滑退出
 module.exports = {
 	apps: [{
 		// 记得和package.json中stop保持一致

@@ -24,18 +24,10 @@ const path = require('path');
 const fs = require('fs');
 const logger = require('./lib/logger');
 const statusCode = require('./lib/http-status');
-// const registerErrorHandler = require('./lib/error-handler');
+const registerErrorHandler = require('./lib/error-handler');
 
 
-// const registerErrorHandler = require('./lib/error-handler');
 
-// TODO
-// registerErrorHandler('unhandledRejection');
-// registerErrorHandler('uncaughtException', {});
-// registerErrorHandler('SIGINT');
-// registerErrorHandler('SIGTERM');
-// registerErrorHandler('SIGQUIT');
-// registerErrorHandler('SIGHUP');
 
 const app = new Aloridal({
 	http2: JSON.parse(process.env.ENABLE_HTTP2 || 'false'),
@@ -89,9 +81,9 @@ app.register(redis, {
 	password: process.env.REDIS_PASS
 }).after(err => {
 	if (err) {
-		console.error(err);
+		logger.error(err);
 	} else {
-		console.log('Redis is connected.');
+		logger.info('Redis is connected.');
 	}
 });
 
@@ -107,9 +99,9 @@ app.register(postgre, {
 	max: parseInt(process.env.PGPOOLSIZE, 10) || 10
 }).after(err => {
 	if (err) {
-		console.error(err);
+		logger.error(err);
 	} else {
-		console.log('Postgre is connected.');
+		logger.info('Postgre is connected.');
 	}
 });
 
@@ -190,5 +182,29 @@ app.listen(
 			// 关闭就退出了
 			return;
 		}
-		console.log(`Server is running on ${address}`);
+		logger.info(`Server is running on ${address}`);
+		// for PM2
+		if (process.send) {
+			process.send('ready');
+		}
 	});
+
+const errHandler = {
+	cleaner: {
+		cleanup() {
+			app.close();
+		}
+	},
+	logger: {
+		log(...args) {
+			logger.info(args);
+		}
+	}
+};
+
+registerErrorHandler('unhandledRejection', errHandler);
+registerErrorHandler('uncaughtException', errHandler);
+registerErrorHandler('SIGINT', errHandler);
+registerErrorHandler('SIGTERM', errHandler);
+registerErrorHandler('SIGQUIT', errHandler);
+registerErrorHandler('SIGHUP', errHandler);
