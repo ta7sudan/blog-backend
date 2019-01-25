@@ -4,7 +4,8 @@
   "description": "blog backend",
   "main": "src/index.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=production echo 'todo'",
+    "start": "pm2 start --env production",
+    "stop": "pm2 stop blog-backend",
     "dev": "cross-env NODE_ENV=development node src/index.js",
     "lint": "eslint src test",
     "format": "prettier --config .prettierrc.js --write src/**/*.js test/**/*.js",
