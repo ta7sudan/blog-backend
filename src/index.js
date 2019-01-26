@@ -20,6 +20,7 @@ const cookie = require('fastify-cookie');
 const redis = require('fastify-redis');
 const postgre = require('fastify-postgres');
 const sqorn = require('./plugins/sqorn');
+const dao = require('./plugins/dao');
 const rateLimit = require('fastify-rate-limit');
 const path = require('path');
 const fs = require('fs');
@@ -108,6 +109,10 @@ app.register(postgre, {
 
 // 这个必须在pg插件之后, 依赖于pg插件
 app.register(sqorn);
+
+app.register(dao, {
+	dir: path.resolve(__dirname, './dao')
+});
 
 
 // Decorators

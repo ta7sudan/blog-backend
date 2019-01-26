@@ -1,5 +1,5 @@
 'use strict';
 
-module.exports = ctx => ({
-	'get /posts/:page': ctx.controller.posts.getPosts
+module.exports = ({ controller }) => ({
+	'get /home/posts/:page': controller.posts.getPreviewPosts
 });

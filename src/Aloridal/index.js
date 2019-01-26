@@ -1,7 +1,7 @@
 'use strict';
 const Fastify = require('fastify');
-const fs = require('fs');
 const path = require('path');
+const { _load } = require('../lib/util');
 
 const PROJECT_SRC = path.dirname(require.main.filename);
 const SERVICE_DIR = path.resolve(PROJECT_SRC, 'service');
@@ -11,28 +11,6 @@ const ROUTE_DIR = path.resolve(PROJECT_SRC, 'route');
 const toString = Object.prototype.toString.call.bind(Object.prototype.toString);
 const isFn = fn => typeof fn === 'function';
 
-function _load(dir, ctx, fn) {
-	const filenames = fs.readdirSync(dir, 'utf8');
-	return filenames
-		.map(file => {
-			let subDir = null, namespace = null, module = null;
-			if (path.extname(file) === '.js') {
-				// 如果文件名是aaa.bbb.js怎么办?
-				// 有人要用aaa.bbb来做命名空间也是脑子抽了...
-				namespace = file.split('.')[0];
-				module = fn(dir, null, file, ctx);
-			} else if (fs.statSync(subDir = path.join(dir, file)).isDirectory()) {
-				namespace = file;
-				module = fn(null, subDir, null, ctx);
-			}
-			module[Symbol.for('isNamespace')] = true;
-			return {
-				namespace,
-				module
-			};
-		})
-		.reduce((prev, cur) => (prev[cur.namespace] = cur.module, prev), {});
-}
 
 function loadService(dir, ctx) {
 	return _load(dir, ctx, (_dir, _subDir, _file, _ctx) => {
