@@ -21,6 +21,7 @@ const redis = require('fastify-redis');
 const postgre = require('fastify-postgres');
 const sqorn = require('./plugins/sqorn');
 const dao = require('./plugins/dao');
+const addRoot = require('./plugins/root');
 const rateLimit = require('fastify-rate-limit');
 const path = require('path');
 const fs = require('fs');
@@ -114,6 +115,8 @@ app.register(dao, {
 	dir: path.resolve(__dirname, './dao')
 });
 
+app.register(addRoot);
+
 
 // Decorators
 app.decorateReply('statusCode', statusCode);
@@ -147,7 +150,7 @@ if (process.env.NODE_ENV !== 'production') {
 	});
 }
 
-app.registerRoute(['home'], async ctx => {
+app.registerRoute('web', async ctx => {
 	ctx.register(rateLimit, {
 		max: 100,
 		timeWindow: 60000,

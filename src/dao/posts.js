@@ -26,7 +26,6 @@ module.exports = ({ sq, log }) => ({
 			.offset(page * limit);
 		try {
 			const posts = await query.all();
-			log.info(query.query);
 			return {
 				posts,
 				total: posts[0] ? posts[0].total : 0

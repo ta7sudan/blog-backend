@@ -1,7 +1,7 @@
 CREATE TABLE users (
 	id SERIAL PRIMARY KEY,
 	name varchar(30) UNIQUE NOT NULL,
-	password varchar(30) NOT NULL,
+	password varchar(100) NOT NULL,
 	profile text,
 	backup0 integer,
 	backup1 integer,
@@ -19,7 +19,7 @@ CREATE TABLE users (
 CREATE TABLE posts (
 	id SERIAL PRIMARY KEY,
 	pid varchar(40) UNIQUE NOT NULL, -- uuid, postgre鼓励不用char()
-	uid integer REFERENCES users(id) NOT NULL,
+	uid integer REFERENCES users(id) ON DELETE CASCADE NOT NULL,
 	title varchar(80) NOT NULL,
 	author varchar(30) NOT NULL,
 	tags varchar(30)[], -- 备用
@@ -44,7 +44,7 @@ CREATE TABLE posts (
 
 CREATE TABLE tags (
 	id SERIAL PRIMARY KEY,
-	pid integer REFERENCES posts(id) NOT NULL,
+	pid integer REFERENCES posts(id) ON DELETE CASCADE NOT NULL,
 	tag_name varchar(30) NOT NULL,
 	backup0 integer,
 	backup1 integer,
