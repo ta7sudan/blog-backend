@@ -23,6 +23,8 @@ const sqorn = require('./plugins/sqorn');
 const dao = require('./plugins/dao');
 const addRoot = require('./plugins/root');
 const rateLimit = require('fastify-rate-limit');
+const pointToView = require('point-of-view');
+const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');
 const logger = require('./lib/logger');
@@ -149,6 +151,28 @@ if (process.env.NODE_ENV !== 'production') {
 		logLevel: 'warn'
 	});
 }
+
+app.registerRoute('admin.auth', async ctx => {
+	ctx.register(rateLimit, {
+		max: 15,
+		timeWindow: 1800000,
+		cache: 1000,
+		redis: ctx.redis
+	});
+}, {
+	prefix: `api/${process.env.API_VERSION || 'v1'}`,
+	logLevel: 'warn'
+});
+
+app.registerRoute('admin.login', async ctx => {
+	ctx.register(pointToView, {
+		engine: {
+			ejs
+		}
+	});
+}, {
+	logLevel: 'warn'
+});
 
 app.registerRoute('web', async ctx => {
 	ctx.register(rateLimit, {
