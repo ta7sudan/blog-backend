@@ -1,5 +1,5 @@
 'use strict';
-const { HOME_PAGE, POSTS_TOTAL } = require('../lib/key-map');
+const { HOME_PAGE, POSTS_TOTAL, POST } = require('../lib/key-map');
 
 module.exports = {
 	async getPreviewPosts(page = 0, limit = 10) {
@@ -39,5 +39,22 @@ module.exports = {
 				pipeline.exec();
 			});
 		});
+	},
+	async getPostByPid(pid) {
+		const { dao, redis } = this;
+		let post = null;
+		if ((await redis.exists(`${POST}:${pid}`)) === 1) {
+			post = JSON.parse(await redis.get(`${POST}:${pid}`));
+		} else {
+			post = await dao.posts.getPostByPid(pid);
+			if (post) {
+				redis.set(`${POST}:${post.id}`, JSON.stringify(post), 'EX', 3600);
+			}
+		}
+		return post;
+	},
+	async updateViewCount(pid) {
+		const { dao } = this;
+		await dao.posts.updateViewCount(pid);
 	}
 };

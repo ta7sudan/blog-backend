@@ -41,7 +41,7 @@ const app = new Aloridal({
 		key: fs.readFileSync(path.resolve(__dirname, '..', process.env.TLS_KEY)),
 		cert: fs.readFileSync(path.resolve(__dirname, '..', process.env.TLS_CERT))
 	} : null,
-	maxParamLength: parseInt(process.env.MAX_PARAM_LENGTH, 10) || 60,
+	maxParamLength: parseInt(process.env.MAX_PARAM_LENGTH, 10) || 80,
 	bodyLimit: parseInt(process.env.BODY_LIMIT, 10) || 1048576,
 	// 日志分割交割PM2或其他进程管理吧, 这里默认就好
 	// logger可能不仅仅在Fastify作用域中用到, 还是手动给一个吧

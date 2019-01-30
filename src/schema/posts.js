@@ -100,7 +100,49 @@ module.exports = {
 					type: 'string'
 				}
 			}
-
+		}
+	},
+	getPostByPid: {
+		response: {
+			200: {
+				type: 'object',
+				required: ['id', 'title', 'author', 'views', 'createdTime'],
+				properties: {
+					id: {
+						type: 'string'
+					},
+					title: {
+						type: 'string'
+					},
+					author: {
+						type: 'string'
+					},
+					tags: {
+						type: 'array',
+						items: {
+							type: 'string'
+						}
+					},
+					views: {
+						type: 'integer'
+					},
+					img: {
+						type: 'string'
+					},
+					parsed: {
+						type: 'boolean'
+					},
+					createdTime: {
+						type: 'integer'
+					},
+					modifiedTime: {
+						type: 'integer'
+					},
+					content: {
+						type: 'string'
+					}
+				}
+			}
 		}
 	}
 };

@@ -6,14 +6,14 @@ module.exports = ({ sq, log }) => ({
 		const foo = sq.return`count(posts.id) as total`.from`posts`;
 		const query = sq.return`
 			foo.total::integer,
-			posts.id,
-			posts.pid,
+			posts.id as kid,
+			posts.pid as id,
 			users.name as author,
 			posts.title, posts.views,
 			posts.img,
 			posts.parsed,
-			posts.created_time as createdTime,
-			posts.modified_time as modifiedTime,
+			posts.created_time,
+			posts.modified_time,
 			posts.content,
 			array_agg(tags.tag_name) as tags`
 			.from`posts, users, tags, ${foo} as foo`
@@ -27,6 +27,12 @@ module.exports = ({ sq, log }) => ({
 			.offset(page * limit);
 		try {
 			const posts = await query.all();
+			// 坑爹, 没找到这个库提供类型转换的API
+			posts.forEach(post => {
+				post.page = page + 1;
+				post.createdTime = post.createdTime.getTime();
+				post.modifiedTime && (post.modifiedTime = post.modifiedTime.getTime());
+			});
 			return {
 				posts,
 				total: posts[0] ? posts[0].total : 0
@@ -63,6 +69,66 @@ module.exports = ({ sq, log }) => ({
 		} catch (err) {
 			await trx.rollback();
 			throw err;
+		}
+	},
+	async getPostByPid(pid) {
+		const subQuery = sq.return`
+			posts.id,
+			posts.pid,
+			posts.title,
+			posts.author,
+			posts.views,
+			posts.img,
+			posts.parsed,
+			posts.created_time,
+			posts.modified_time,
+			posts.content`
+			.from`posts`
+			.where`posts.pid=${pid}`;
+		const query = sq.return`
+			foo.pid as id,
+			foo.title,
+			foo.author,
+			foo.views,
+			foo.img,
+			foo.parsed,
+			foo.created_time,
+			foo.modified_time,
+			foo.content,
+			array_agg(tags.tag_name) as tags`
+			.from`tags, ${subQuery} as foo`
+			.where`tags.pid = foo.id`
+			.groupBy('foo.pid',
+				'foo.title',
+				'foo.author',
+				'foo.views',
+				'foo.img',
+				'foo.parsed',
+				'foo.created_time',
+				'foo.modified_time',
+				'foo.content');
+		try {
+			const post = await query.one();
+			post && (post.createdTime = post.createdTime.getTime());
+			post && post.modifiedTime && (post.modifiedTime = post.modifiedTime.getTime());
+			return post;
+		} catch (err) {
+			log.error(err);
+			log.error(query.query);
+			throw err;
+		}
+	},
+	async updateViewCount(pid) {
+		const query = sq.from`posts`
+			.set`views=views+1`
+			.where`posts.pid=${pid}`;
+		try {
+			await query.one();
+			return true;
+		} catch (err) {
+			log.error(err);
+			log.error(query.query);
+			return false;
 		}
 	}
 });
