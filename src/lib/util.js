@@ -2,6 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 const { BMP24 } = require('gd-bmp');
+const crypto = require('crypto');
+
 
 function rand(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + Math.floor(min);
@@ -53,6 +55,10 @@ exports.createCaptcha = function createCaptcha(width = 120, height = 40) {
 		img,
 		captcha: captchaArr.join('')
 	};
+};
+
+exports.sha256 = function sha256(str) {
+	return crypto.createHash('sha256').update(str).digest('hex');
 };
 
 

@@ -119,6 +119,10 @@ app.register(dao, {
 
 app.register(addRoot);
 
+app.register(require('fastify-static'), {
+	root: path.resolve(__dirname, '../public')
+});
+
 
 // Decorators
 app.decorateReply('statusCode', statusCode);
@@ -154,7 +158,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 app.registerRoute('admin.auth', async ctx => {
 	ctx.register(rateLimit, {
-		max: 15,
+		max: process.env.NODE_ENV === 'production' ? 15 : 10000,
 		timeWindow: 1800000,
 		cache: 1000,
 		redis: ctx.redis
