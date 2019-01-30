@@ -78,5 +78,29 @@ module.exports = {
 				}
 			}
 		}
+	},
+	addPost: {
+		body: {
+			type: 'object',
+			required: ['title'],
+			properties: {
+				title: {
+					type: 'string'
+				},
+				tags: {
+					type: 'array',
+					items: {
+						type: 'string'
+					}
+				},
+				titleMap: {
+					type: 'string'
+				},
+				content: {
+					type: 'string'
+				}
+			}
+
+		}
 	}
 };

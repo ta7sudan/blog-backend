@@ -18,7 +18,7 @@ CREATE TABLE users (
 
 CREATE TABLE posts (
 	id SERIAL PRIMARY KEY,
-	pid varchar(40) UNIQUE NOT NULL, -- uuid, postgre鼓励不用char()
+	pid varchar(80) UNIQUE NOT NULL, -- uuid, postgre鼓励不用char()
 	uid integer REFERENCES users(id) ON DELETE CASCADE NOT NULL,
 	title varchar(80) NOT NULL,
 	author varchar(30) NOT NULL,

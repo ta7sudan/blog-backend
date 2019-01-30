@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+<body>
+	<form>
+		<label for="title">Title:</label>
+		<input id="title" type="text">
+		<br />
+		<label for="tags">Tags:</label>
+		<input id="tags" type="text">
+		<br />
+		<label for="titlemap">Img:</label>
+		<input id="titlemap" type="text">
+		<br />
+		<button id="submit">Submit</button>
+		<br />
+		<label for="content">Content:</label>
+		<br />
+		<textarea name="content" id="content" cols="80" rows="200"></textarea>
+	</form>
+	<script src="/tinyjx.min.js"></script>
+	<script>
+		var submit = document.getElementById('submit');
+		submit.addEventListener('click', function (e) {
+			e.preventDefault();
+			tinyjx.ajax({
+				method: 'post',
+				url: '/api/v1/posts',
+				data: {
+					title: window.title.value,
+					tags: window.tags.value.split(',').map(v => v.trim()),
+					titleMap: window.titlemap.value,
+					content: window.content.value
+				},
+				success(data) {
+					console.log(data);
+				},
+				error(err) {
+					console.log(err);
+				}
+			});
+		});
+	</script>
+</body>
+</html>

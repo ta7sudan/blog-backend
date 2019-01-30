@@ -33,14 +33,9 @@ module.exports = () => ({
 				errorMessage: 'Invalid username or password'
 			};
 		}
-		const uid = sha256(rst[0].name + process.env.USER_SECRET);
-		res.setCookie('uid', uid, {
-			expires: new Date(Date.now() + 3600000),
-			httpOnly: true,
-			path: '/',
-			secure: process.env.NODE_ENV === 'production'
-		});
-		this.redis.set(uid, true, 'EX', 3605);
+		const user = rst[0].name;
+		const uid = sha256(user + process.env.USER_SECRET);
+		res.authorize(uid, JSON.stringify(rst[0]));
 		return {
 			statusCode: res.statusCode.OK,
 			errorMessage: 'ok',

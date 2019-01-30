@@ -21,6 +21,7 @@ const redis = require('fastify-redis');
 const postgre = require('fastify-postgres');
 const sqorn = require('./plugins/sqorn');
 const dao = require('./plugins/dao');
+const auth = require('./plugins/auth');
 const addRoot = require('./plugins/root');
 const rateLimit = require('fastify-rate-limit');
 const pointToView = require('point-of-view');
@@ -119,9 +120,12 @@ app.register(dao, {
 
 app.register(addRoot);
 
-app.register(require('fastify-static'), {
-	root: path.resolve(__dirname, '../public')
-});
+if (process.env.NODE_ENV !== 'production') {
+	app.register(require('fastify-static'), {
+		logLevel: 'warn',
+		root: path.resolve(__dirname, '../public')
+	});
+}
 
 
 // Decorators
@@ -163,12 +167,48 @@ app.registerRoute('admin.auth', async ctx => {
 		cache: 1000,
 		redis: ctx.redis
 	});
+	ctx.register(auth, {
+		key: 'uid',
+		secure: process.env.NODE_ENV === 'production',
+		path: '/',
+		httpOnly: true,
+		expires: 3600,
+		redis: ctx.redis
+	});
 }, {
 	prefix: `api/${process.env.API_VERSION || 'v1'}`,
 	logLevel: 'warn'
 });
 
-app.registerRoute('admin.login', async ctx => {
+app.registerRoute('admin.posts', async ctx => {
+	ctx.register(rateLimit, {
+		max: process.env.NODE_ENV === 'production' ? 50 : 10000,
+		timeWindow: 1800000,
+		cache: 1000,
+		redis: ctx.redis
+	});
+	ctx.register(auth, {
+		key: 'uid',
+		secure: process.env.NODE_ENV === 'production',
+		path: '/',
+		httpOnly: true,
+		expires: 3600,
+		redis: ctx.redis
+	});
+}, {
+	prefix: `api/${process.env.API_VERSION || 'v1'}`,
+	logLevel: 'warn'
+});
+
+app.registerRoute('admin.page', async ctx => {
+	ctx.register(auth, {
+		key: 'uid',
+		secure: process.env.NODE_ENV === 'production',
+		path: '/',
+		httpOnly: true,
+		expires: 3600,
+		redis: ctx.redis
+	});
 	ctx.register(pointToView, {
 		engine: {
 			ejs
