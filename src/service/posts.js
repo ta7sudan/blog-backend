@@ -1,13 +1,16 @@
 'use strict';
-const { HOME_PAGE, POSTS_TOTAL, POST } = require('../lib/key-map');
+const { HOME_PAGE, POSTS_TOTAL, POST, ARCHIVES, ARCHIVES_TOTAL } = require('../lib/key-map');
 
 module.exports = {
 	async getPreviewPosts(page = 0, limit = 10) {
 		const { redis } = this;
 		if ((await redis.exists(`${HOME_PAGE}:${page}:${limit}`, POSTS_TOTAL)) === 2) {
 			// 这样的话, 是不是有可能被想搞事的人用不同limit把内存搞爆...
-			const posts = JSON.parse(await redis.get(`${HOME_PAGE}:${page}:${limit}`));
-			const total = parseInt(await redis.get(POSTS_TOTAL), 10);
+			const r1 = redis.get(`${HOME_PAGE}:${page}:${limit}`),
+				r2 = redis.get(POSTS_TOTAL);
+			const [rst1, rst2] = await Promise.all([r1, r2]);
+			const posts = JSON.parse(rst1);
+			const total = parseInt(rst2, 10);
 			return {
 				posts,
 				total
@@ -32,7 +35,7 @@ module.exports = {
 		const { dao, redis } = this;
 		await dao.posts.addPost(post, user);
 		setImmediate(() => {
-			redis.del(POSTS_TOTAL);
+			redis.del(POSTS_TOTAL, ARCHIVES_TOTAL);
 			redis.keys(`${HOME_PAGE}:*`).then(keys => {
 				const pipeline = redis.pipeline();
 				keys.forEach(k => pipeline.del(k));
@@ -74,8 +77,55 @@ module.exports = {
 		return rst;
 	},
 	async delPostByPid(pid) {
-		const { dao } = this;
+		const { dao, redis } = this;
 		const rst = await dao.posts.delPostByPid(pid);
+		setImmediate(() => {
+			redis.del(POSTS_TOTAL, ARCHIVES_TOTAL, `${POST}:${pid}`);
+			redis.keys(`${HOME_PAGE}:*`).then(keys => {
+				const pipeline = redis.pipeline();
+				keys.forEach(k => pipeline.del(k));
+				pipeline.exec();
+			});
+		});
 		return rst;
+	},
+	async getArchivesByPage(page = 0, limit = 5) {
+		const { dao, redis } = this, map = {};
+		let archives = null, rst = null, total = 0;
+
+		if ((await redis.exists(`${ARCHIVES}:${page}:${limit}`, ARCHIVES_TOTAL)) === 2) {
+			const r1 = redis.get(`${ARCHIVES}:${page}:${limit}`),
+				r2 = redis.get(ARCHIVES_TOTAL);
+			const [rst1, rst2] = await Promise.all([r1, r2]);
+			archives = JSON.parse(rst1);
+			total = parseInt(rst2, 10);
+		} else {
+			const p1 = dao.posts.getArchivesByPage(page, limit);
+			const p2 = dao.posts.getMonthTotal();
+			[rst, total] = await Promise.all([p1, p2]);
+			for (const item of rst) {
+				if (!map[`${item.year}-${item.month}`]) {
+					map[`${item.year}-${item.month}`] = [];
+				}
+				map[`${item.year}-${item.month}`].push(item);
+			}
+			archives = Object.keys(map).map(k => ({
+				group: k,
+				posts: map[k]
+			}));
+			setImmediate(() => {
+				redis.pipeline()
+					.multi()
+					.set(`${ARCHIVES}:${page}:${limit}`, JSON.stringify(archives), 'EX', 3600)
+					.set(ARCHIVES_TOTAL, total, 'EX', 3600)
+					.exec()
+					.exec();
+			});
+		}
+		return {
+			archives,
+			total
+		};
+
 	}
 };

@@ -13,7 +13,7 @@ module.exports = {
 			properties: {
 				page: {
 					type: 'integer',
-					minimum: 0
+					minimum: 1
 				}
 			}
 		},
@@ -183,6 +183,67 @@ module.exports = {
 							},
 							title: {
 								type: 'string'
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	getArchivesByPage: {
+		params: {
+			type: 'object',
+			properties: {
+				page: {
+					type: 'integer',
+					minimum: 1
+				}
+			}
+		},
+		response: {
+			200: {
+				type: 'object',
+				properties: {
+					statusCode: {
+						type: 'integer'
+					},
+					errorMessage: {
+						type: 'string'
+					},
+					total: {
+						type: 'integer'
+					},
+					archives: {
+						type: 'array',
+						items: {
+							type: 'object',
+							properties: {
+								group: {
+									type: 'string'
+								},
+								posts: {
+									type: 'array',
+									items: {
+										type: 'object',
+										properties: {
+											year: {
+												type: 'integer'
+											},
+											month: {
+												type: 'integer'
+											},
+											date: {
+												type: 'integer'
+											},
+											id: {
+												type: 'string'
+											},
+											title: {
+												type: 'string'
+											}
+										}
+									}
+								}
 							}
 						}
 					}

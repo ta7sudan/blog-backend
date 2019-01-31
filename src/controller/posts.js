@@ -123,5 +123,18 @@ module.exports = ({ service, schema }) => ({
 				errorMessage: 'OK'
 			};
 		}
+	},
+	getArchivesByPage: {
+		schema: schema.posts.getArchivesByPage,
+		async handler(req, res) {
+			const page = req.params.page;
+			const rst = await service.posts.getArchivesByPage(page - 1, 5);
+			return {
+				statusCode: res.statusCode.OK,
+				errorMessage: 'OK',
+				...rst
+			};
+
+		}
 	}
 });

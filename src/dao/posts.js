@@ -182,5 +182,47 @@ module.exports = ({ sq, log }) => ({
 			log.error(query.query);
 			throw err;
 		}
+	},
+	async getArchivesByPage(page = 0, limit = 5) {
+		const bar = sq
+			.from`posts`
+			.return`to_char(posts.created_time, 'YYYY-MM') as foo`
+			.groupBy`foo`
+			.orderBy({
+				by: 'foo',
+				sort: 'desc'
+			})
+			.limit(limit)
+			.offset(page * limit);
+		const query = sq
+			.from`posts, ${bar} as bar`
+			.return`
+				posts.pid, 
+				posts.title, 
+				to_char(posts.created_time, 'YYYY')::integer as year, 
+				to_char(posts.created_time, 'MM')::integer as month, 
+				to_char(posts.created_time, 'DD')::integer as date`
+			.where`to_char(posts.created_time, 'YYYY-MM')=bar.foo`;
+		try {
+			const rst = await query.all();
+			return rst;
+		} catch (err) {
+			log.error(err);
+			log.error(query.query);
+			throw err;
+		}
+	},
+	async getMonthTotal() {
+		const bar = sq.return`to_char(posts.created_time, 'YYYY-MM') as foo`.from`posts`.groupBy`foo`;
+		const query = sq.return`count(*)::integer as total`.from`${bar} as bar`;
+		try {
+			const { total } = await query.one();
+			return total;
+		} catch (err) {
+			log.error(err);
+			log.error(query.query);
+			throw err;
+		}
+
 	}
 });
