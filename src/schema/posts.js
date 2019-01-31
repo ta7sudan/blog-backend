@@ -108,6 +108,12 @@ module.exports = {
 				type: 'object',
 				required: ['id', 'title', 'author', 'views', 'createdTime'],
 				properties: {
+					statusCode: {
+						type: 'integer'
+					},
+					errorMessage: {
+						type: 'string'
+					},
 					id: {
 						type: 'string'
 					},
@@ -140,6 +146,45 @@ module.exports = {
 					},
 					content: {
 						type: 'string'
+					}
+				}
+			}
+		}
+	},
+	getPrevAndNextByPid: {
+		response: {
+			200: {
+				type: 'object',
+				properties: {
+					statusCode: {
+						type: 'integer'
+					},
+					errorMessage: {
+						type: 'string'
+					},
+					prev: {
+						type: 'object',
+						required: ['id', 'title'],
+						properties: {
+							id: {
+								type: 'string'
+							},
+							title: {
+								type: 'string'
+							}
+						}
+					},
+					next: {
+						type: 'object',
+						required: ['id', 'title'],
+						properties: {
+							id: {
+								type: 'string'
+							},
+							title: {
+								type: 'string'
+							}
+						}
 					}
 				}
 			}

@@ -130,5 +130,47 @@ module.exports = ({ sq, log }) => ({
 			log.error(query.query);
 			return false;
 		}
+	},
+	async getSblingByPid(pid) {
+		const foo = sq.return`
+		posts.id,
+		posts.pid,
+		posts.uid,
+		posts.title,
+		posts.views,
+		posts.img,
+		posts.parsed,
+		posts.created_time,
+		posts.modified_time,
+		posts.content,
+		lag(pid) over(order by id) as prev,
+		lead(pid) over(order by id) as next
+		`.from`posts`;
+		const bar = sq.from`${foo} as foo`
+			.where`${pid} in (foo.pid, foo.prev, foo.next)`;
+		const query = sq.return`
+		users.name as author,
+		bar.pid as id,
+		bar.title,
+		bar.views,
+		bar.img,
+		bar.parsed,
+		bar.created_time,
+		bar.modified_time,
+		bar.content,
+		array_agg(tags.tag_name) as tags
+		`
+			.from`tags, users, ${bar} as bar`
+			.where`tags.pid = bar.id and users.id = bar.uid`
+			.groupBy`users.name, bar.id, bar.pid, bar.title, bar.views, bar.img, bar.parsed, bar.created_time, bar.modified_time, bar.content`;
+		try {
+			const rst = await query.all();
+			return rst;
+		} catch (err) {
+			log.error(err);
+			log.error(query.query);
+			throw err;
+		}
+
 	}
 });

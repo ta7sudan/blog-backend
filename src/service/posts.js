@@ -56,5 +56,21 @@ module.exports = {
 	async updateViewCount(pid) {
 		const { dao } = this;
 		await dao.posts.updateViewCount(pid);
+	},
+	async getPrevAndNextByPid(pid) {
+		const { dao } = this, rst = {};
+		const group = await dao.posts.getSblingByPid(pid);
+		for (let i = 0, len = group.length; i < len; ++i) {
+			if (group[i].id === pid) {
+				if (group[i-1]) {
+					rst.prev = group[i-1];
+				}
+				if (group[i+1]) {
+					rst.next = group[i+1];
+				}
+				break;
+			}
+		}
+		return rst;
 	}
 };

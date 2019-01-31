@@ -1,5 +1,6 @@
 'use strict';
 
 module.exports = ({ controller }) => ({
-	'get /posts/:pid': controller.posts.getPostByPid
+	'get /posts/:pid': controller.posts.getPostByPid0,
+	'get /prev-next': controller.posts.getPrevAndNextByPid
 });
