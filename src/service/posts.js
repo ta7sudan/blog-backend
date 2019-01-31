@@ -72,5 +72,10 @@ module.exports = {
 			}
 		}
 		return rst;
+	},
+	async delPostByPid(pid) {
+		const { dao } = this;
+		const rst = await dao.posts.delPostByPid(pid);
+		return rst;
 	}
 };

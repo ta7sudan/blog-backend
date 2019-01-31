@@ -6,7 +6,7 @@ async function preHandler(req, res) {
 		res.code(res.statusCode.ACCESS_FORBIDDEN);
 		res.send({
 			statusCode: res.statusCode.ACCESS_FORBIDDEN,
-			errorMessage: 'Access forbidden',
+			errorMessage: 'Access forbidden'
 		});
 		return;
 	}
@@ -95,7 +95,7 @@ module.exports = ({ service, schema }) => ({
 				res.code(res.statusCode.NOT_FOUND);
 				return {
 					statusCode: res.statusCode.NOT_FOUND,
-					errorMessage: 'Not found',
+					errorMessage: 'Not found'
 				};
 			}
 			const rst = await service.posts.getPrevAndNextByPid(pid.trim());
@@ -103,6 +103,24 @@ module.exports = ({ service, schema }) => ({
 				statusCode: res.statusCode.OK,
 				errorMessage: 'OK',
 				...rst
+			};
+		}
+	},
+	delPostByPid: {
+		preHandler,
+		async handler(req, res) {
+			const pid = req.params.pid;
+			if (!pid) {
+				res.code(res.statusCode.NOT_FOUND);
+				return {
+					statusCode: res.statusCode.NOT_FOUND,
+					errorMessage: 'Not found'
+				};
+			}
+			await service.posts.delPostByPid(pid.trim());
+			return {
+				statusCode: res.statusCode.OK,
+				errorMessage: 'OK'
 			};
 		}
 	}

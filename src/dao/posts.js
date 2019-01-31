@@ -171,6 +171,16 @@ module.exports = ({ sq, log }) => ({
 			log.error(query.query);
 			throw err;
 		}
-
+	},
+	async delPostByPid(pid) {
+		const query = sq.delete.from`posts`.where`posts.pid=${pid}`;
+		try {
+			const rst = await query.one();
+			return rst;
+		} catch (err) {
+			log.error(err);
+			log.error(query.query);
+			throw err;
+		}
 	}
 });
