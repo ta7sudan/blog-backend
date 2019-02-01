@@ -292,5 +292,34 @@ module.exports = {
 				}
 			}
 		}
+	},
+	searchTitleAndContent: {
+		response: {
+			200: {
+				type: 'object',
+				properties: {
+					statusCode: {
+						type: 'integer'
+					},
+					errorMessage: {
+						type: 'string'
+					},
+					result: {
+						type: 'array',
+						items: {
+							type: 'object',
+							properties: {
+								id: {
+									type: 'string'
+								},
+								title: {
+									type: 'string'
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 };

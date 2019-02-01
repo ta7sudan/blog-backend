@@ -147,5 +147,25 @@ module.exports = ({ service, schema }) => ({
 				tags
 			};
 		}
+	},
+	searchTitleAndContent: {
+		schema: schema.posts.searchTitleAndContent,
+		async handler(req, res) {
+			const query = req.query.query;
+			if (query && query.trim()) {
+				const result = await service.posts.searchTitleAndContent(query);
+				return {
+					statusCode: res.statusCode.OK,
+					errorMessage: 'OK',
+					result
+				};
+			} else {
+				res.code(res.statusCode.NOT_FOUND);
+				return {
+					statusCode: res.statusCode.NOT_FOUND,
+					errorMessage: 'Not found',
+				};
+			}
+		}
 	}
 });

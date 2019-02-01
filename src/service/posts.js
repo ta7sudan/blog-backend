@@ -142,5 +142,10 @@ module.exports = {
 			posts: map[k]
 		}));
 		return tags;
+	},
+	async searchTitleAndContent(query) {
+		const { dao }= this;
+		const rst = await dao.posts.searchTitleAndContent(query);
+		return rst;
 	}
 };

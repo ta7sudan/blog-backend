@@ -250,5 +250,24 @@ module.exports = ({ sq, log }) => ({
 			log.error(query.query);
 			throw err;
 		}
+	},
+	async searchTitleAndContent(search) {
+		if (!search) {
+			return [];
+		}
+		const match = `%${search}%`;
+		const query = sq.return`
+			posts.pid as id,
+			posts.title`
+			.from`posts`
+			.where`posts.content ilike ${match} or posts.title ilike ${match}`;
+		try {
+			const rst = await query.all();
+			return rst;
+		} catch (err) {
+			log.error(err);
+			log.error(query.query);
+			throw err;
+		}
 	}
 });
