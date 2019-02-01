@@ -1,5 +1,5 @@
 'use strict';
-const { HOME_PAGE, POSTS_TOTAL, POST, ARCHIVES, ARCHIVES_TOTAL } = require('../lib/key-map');
+const { HOME_PAGE, POSTS_TOTAL, POST, ARCHIVES, ARCHIVES_TOTAL, TAGS, PREVNEXT } = require('../lib/key-map');
 
 module.exports = {
 	async getPreviewPosts(page = 0, limit = 10) {
@@ -35,10 +35,15 @@ module.exports = {
 		const { dao, redis } = this;
 		await dao.posts.addPost(post, user);
 		setImmediate(() => {
-			redis.del(POSTS_TOTAL, ARCHIVES_TOTAL);
-			redis.keys(`${HOME_PAGE}:*`).then(keys => {
-				const pipeline = redis.pipeline();
-				keys.forEach(k => pipeline.del(k));
+			const pipeline = redis.pipeline();
+			Promise.all([
+				redis.keys(`${HOME_PAGE}:*`),
+				redis.keys(`${ARCHIVES}:*`),
+				redis.keys(`${TAGS}:*`),
+				redis.keys(`${PREVNEXT}:*`)
+			]).then(([k1, k2, k3, k4]) => {
+				[].concat(k1, k2, k3, k4).forEach(k => pipeline.del(k));
+				pipeline.del(POSTS_TOTAL, ARCHIVES_TOTAL);
 				pipeline.exec();
 			});
 		});
@@ -61,29 +66,40 @@ module.exports = {
 		await dao.posts.updateViewCount(pid);
 	},
 	async getPrevAndNextByPid(pid) {
-		const { dao } = this, rst = {};
-		const group = await dao.posts.getSblingByPid(pid);
-		for (let i = 0, len = group.length; i < len; ++i) {
-			if (group[i].id === pid) {
-				if (group[i-1]) {
-					rst.prev = group[i-1];
+		const { dao, redis } = this, rst = {};
+
+		if ((await redis.exists(`${PREVNEXT}:${pid}`)) === 1) {
+			return JSON.parse(await redis.get(`${PREVNEXT}:${pid}`));
+		} else {
+			const group = await dao.posts.getSblingByPid(pid);
+			for (let i = 0, len = group.length; i < len; ++i) {
+				if (group[i].id === pid) {
+					if (group[i-1]) {
+						rst.prev = group[i-1];
+					}
+					if (group[i+1]) {
+						rst.next = group[i+1];
+					}
+					break;
 				}
-				if (group[i+1]) {
-					rst.next = group[i+1];
-				}
-				break;
 			}
+			setImmediate(() => redis.set(`${PREVNEXT}:${pid}`, JSON.stringify(rst), 'EX', 3600));
+			return rst;
 		}
-		return rst;
 	},
 	async delPostByPid(pid) {
 		const { dao, redis } = this;
 		const rst = await dao.posts.delPostByPid(pid);
 		setImmediate(() => {
-			redis.del(POSTS_TOTAL, ARCHIVES_TOTAL, `${POST}:${pid}`);
-			redis.keys(`${HOME_PAGE}:*`).then(keys => {
-				const pipeline = redis.pipeline();
-				keys.forEach(k => pipeline.del(k));
+			const pipeline = redis.pipeline();
+			Promise.all([
+				redis.keys(`${HOME_PAGE}:*`),
+				redis.keys(`${ARCHIVES}:*`),
+				redis.keys(`${TAGS}:*`),
+				redis.keys(`${PREVNEXT}:*`)
+			]).then(([k1, k2, k3, k4]) => {
+				[].concat(k1, k2, k3, k4).forEach(k => pipeline.del(k));
+				pipeline.del(POSTS_TOTAL, ARCHIVES_TOTAL, `${POST}:${pid}`);
 				pipeline.exec();
 			});
 		});
@@ -128,20 +144,25 @@ module.exports = {
 		};
 	},
 	async getPostsGroupByTag(tagName = '__all__') {
-		const { dao } = this, map = {};
-		const rst = await dao.posts.getPostsGroupByTag(tagName);
-		for (const item of rst) {
-			const tag = item.tagName;
-			if (!map[tag]) {
-				map[tag] = [];
+		const { dao, redis } = this, map = {};
+		if ((await redis.exists(`${TAGS}:${tagName}`)) === 1) {
+			return JSON.parse(await redis.get(`${TAGS}:${tagName}`));
+		} else {
+			const rst = await dao.posts.getPostsGroupByTag(tagName);
+			for (const item of rst) {
+				const tag = item.tagName;
+				if (!map[tag]) {
+					map[tag] = [];
+				}
+				map[tag].push(item);
 			}
-			map[tag].push(item);
+			const tags = Object.keys(map).map(k => ({
+				tagName: k,
+				posts: map[k]
+			}));
+			setImmediate(() => redis.set(`${TAGS}:${tagName}`, JSON.stringify(tags), 'EX', 3600));
+			return tags;
 		}
-		const tags = Object.keys(map).map(k => ({
-			tagName: k,
-			posts: map[k]
-		}));
-		return tags;
 	},
 	async searchTitleAndContent(query) {
 		const { dao }= this;

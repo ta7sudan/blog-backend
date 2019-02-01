@@ -9,3 +9,7 @@ exports.POST = 'post';
 exports.ARCHIVES = 'archives';
 
 exports.ARCHIVES_TOTAL = 'archives:total';
+
+exports.TAGS = 'tags';
+
+exports.PREVNEXT = 'prevnext';

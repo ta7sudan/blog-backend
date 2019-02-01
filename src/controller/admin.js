@@ -1,18 +1,22 @@
 'use strict';
 
 module.exports = ctx => ({
-	async login(req, res) {
-		if (await req.authenticCookie()) {
-			res.redirect('/admin');
-			return;
-		}
-		res.view('src/views/login.ejs');
+	login(req, res) {
+		req.authenticCookie().then(rst => {
+			if (rst) {
+				res.redirect('/admin');
+			} else {
+				res.view('src/views/login.ejs');
+			}
+		});
 	},
-	async index(req, res) {
-		if (!(await req.authenticCookie())) {
-			res.redirect('/login');
-			return;
-		}
-		res.view('src/views/admin.ejs');
+	index(req, res) {
+		req.authenticCookie().then(rst => {
+			if (!rst) {
+				res.redirect('/login');
+			} else {
+				res.view('src/views/admin.ejs');
+			}
+		});
 	}
 });

@@ -228,7 +228,7 @@ app.registerRoute('web.page', async ctx => {
 	logLevel: 'warn'
 });
 
-app.registerRoute(['web.home', 'web.posts'], async ctx => {
+app.registerRoute(['web.home', 'web.posts', 'web.friends', 'web.user'], async ctx => {
 	ctx.register(rateLimit, {
 		max: 100,
 		timeWindow: 60000,

@@ -2,6 +2,7 @@ CREATE TABLE users (
 	id SERIAL PRIMARY KEY,
 	name varchar(30) UNIQUE NOT NULL,
 	password varchar(100) NOT NULL,
+	"desc" varchar(150),
 	profile text,
 	backup0 integer,
 	backup1 integer,
