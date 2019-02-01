@@ -60,5 +60,17 @@ module.exports = () => ({
 		this.redis.set(uuid, rst.captcha, 'EX', process.env.NODE_ENV === 'production' ? 60 : 3600);
 		res.header('Content-Type', 'image/bmp');
 		res.send(rst.img.getFileData());
+	},
+	async exchangeJWT(req, res) {
+		const uuid = uuidv4();
+		const jwt = this.jwt.sign({
+			tid: uuid
+		});
+		return {
+			statusCode: res.statusCode.OK,
+			errorMessage: 'ok',
+			jwt
+		};
+
 	}
 });

@@ -218,7 +218,17 @@ app.registerRoute('admin.page', async ctx => {
 	logLevel: 'warn'
 });
 
-app.registerRoute('web', async ctx => {
+app.registerRoute('web.page', async ctx => {
+	ctx.register(pointToView, {
+		engine: {
+			ejs
+		}
+	});
+}, {
+	logLevel: 'warn'
+});
+
+app.registerRoute(['web.home', 'web.posts'], async ctx => {
 	ctx.register(rateLimit, {
 		max: 100,
 		timeWindow: 60000,
