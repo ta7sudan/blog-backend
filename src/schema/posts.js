@@ -200,6 +200,15 @@ module.exports = {
 				}
 			}
 		},
+		querystring: {
+			limit: {
+				type: 'integer',
+				minimum: 1
+			},
+			groupBy: {
+				type: 'string'
+			}
+		},
 		response: {
 			200: {
 				type: 'object',

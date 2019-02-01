@@ -197,7 +197,7 @@ module.exports = ({ sq, log }) => ({
 		const query = sq
 			.from`posts, ${bar} as bar`
 			.return`
-				posts.pid, 
+				posts.pid as id, 
 				posts.title, 
 				to_char(posts.created_time, 'YYYY')::integer as year, 
 				to_char(posts.created_time, 'MM')::integer as month, 

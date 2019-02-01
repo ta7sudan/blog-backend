@@ -105,7 +105,8 @@ module.exports = {
 		});
 		return rst;
 	},
-	async getArchivesByPage(page = 0, limit = 5) {
+	// TODO
+	async getArchivesByPage(page = 0, limit = 5, groupBy = 'month') {
 		const { dao, redis } = this, map = {};
 		let archives = null, rst = null, total = 0;
 
