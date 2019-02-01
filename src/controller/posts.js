@@ -136,5 +136,16 @@ module.exports = ({ service, schema }) => ({
 			};
 
 		}
+	},
+	getPostsGroupByTag: {
+		schema: schema.posts.getPostsGroupByTag,
+		async handler(req, res) {
+			const tags = await service.posts.getPostsGroupByTag();
+			return {
+				statusCode: res.statusCode.OK,
+				errorMessage: 'OK',
+				tags
+			};
+		}
 	}
 });

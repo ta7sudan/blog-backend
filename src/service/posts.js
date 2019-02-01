@@ -126,6 +126,21 @@ module.exports = {
 			archives,
 			total
 		};
-
+	},
+	async getPostsGroupByTag(tagName = '__all__') {
+		const { dao } = this, map = {};
+		const rst = await dao.posts.getPostsGroupByTag(tagName);
+		for (const item of rst) {
+			const tag = item.tagName;
+			if (!map[tag]) {
+				map[tag] = [];
+			}
+			map[tag].push(item);
+		}
+		const tags = Object.keys(map).map(k => ({
+			tagName: k,
+			posts: map[k]
+		}));
+		return tags;
 	}
 };

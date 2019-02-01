@@ -250,5 +250,47 @@ module.exports = {
 				}
 			}
 		}
+	},
+	getPostsGroupByTag: {
+		response: {
+			200: {
+				type: 'object',
+				required: ['tags'],
+				properties: {
+					statusCode: {
+						type: 'integer'
+					},
+					errorMessage: {
+						type: 'string'
+					},
+					tags: {
+						type: 'array',
+						items: {
+							type: 'object',
+							properties: {
+								tagName: {
+									type: 'string'
+								},
+								posts: {
+									type: 'array',
+									items: {
+										type: 'object',
+										properties: {
+											id: {
+												type: 'string'
+											},
+											title: {
+												type: 'string'
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+
+				}
+			}
+		}
 	}
 };

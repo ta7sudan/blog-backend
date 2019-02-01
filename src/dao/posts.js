@@ -223,6 +223,32 @@ module.exports = ({ sq, log }) => ({
 			log.error(query.query);
 			throw err;
 		}
-
+	},
+	async getPostsGroupByTag(tagName) {
+		const foo = sq.return`tags.tag_name`
+			.from`tags`
+			.groupBy`tags.tag_name`;
+		let query = sq
+			.return`
+			posts.id as kid,
+			posts.pid as id,
+			posts.title,
+			foo.tag_name`
+			.from`posts, tags, ${foo} as foo`
+			.where`posts.id=tags.pid and tags.tag_name=foo.tag_name`
+			.orderBy({
+				by: 'foo.tag_name'
+			});
+		if (tagName !== '__all__') {
+			query = query.where`tags.tag_name=${tagName}`;
+		}
+		try {
+			const rst = await query.all();
+			return rst;
+		} catch (err) {
+			log.error(err);
+			log.error(query.query);
+			throw err;
+		}
 	}
 });
