@@ -123,13 +123,13 @@ app.register(dao, {
 
 app.register(addRoot);
 
-if (process.env.NODE_ENV !== 'production') {
-	app.register(require('fastify-static'), {
-		logLevel: 'warn',
-		root: path.resolve(__dirname, '../public'),
-		maxAge: '30 days'
-	});
-}
+// if (process.env.NODE_ENV !== 'production') {
+app.register(require('fastify-static'), {
+	logLevel: 'warn',
+	root: path.resolve(__dirname, '../public'),
+	maxAge: '30 days'
+});
+// }
 
 // 下面这些个插件等配好nginx都改掉
 app.register(pointToView, {
