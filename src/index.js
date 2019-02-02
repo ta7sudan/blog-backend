@@ -28,6 +28,9 @@ const pointToView = require('point-of-view');
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');
+const uuidv4 = require('uuid/v4');
+const compress = require('fastify-compress');
+const favicon = require('fastify-favicon');
 const logger = require('./lib/logger');
 const statusCode = require('./lib/http-status');
 const registerErrorHandler = require('./lib/error-handler');
@@ -123,22 +126,53 @@ app.register(addRoot);
 if (process.env.NODE_ENV !== 'production') {
 	app.register(require('fastify-static'), {
 		logLevel: 'warn',
-		root: path.resolve(__dirname, '../public')
+		root: path.resolve(__dirname, '../public'),
+		maxAge: '30 days'
 	});
 }
+
+// 下面这些个插件等配好nginx都改掉
+app.register(pointToView, {
+	engine: {
+		ejs
+	}
+});
+
+app.register(favicon, {
+	path: 'public'
+});
+
+app.register(compress, {
+	brotli: require('iltorb')
+});
 
 
 // Decorators
 app.decorateReply('statusCode', statusCode);
 
 
-app.setNotFoundHandler(async (req, res) => {
-	const { NOT_FOUND } = res.statusCode;
-	res.code(NOT_FOUND);
-	return {
-		statusCode: NOT_FOUND,
-		errorMessage: 'Not found'
-	};
+app.setNotFoundHandler(async function (req, res) {
+	// 暂时没有nginx(运维苦手..)所以先从node层面做history api
+	// 的fallback吧
+	if (!req.cookies.JWT) {
+		const uuid = uuidv4();
+		const jwt = this.jwt.sign({
+			tid: uuid
+		});
+		res.setCookie('JWT', jwt, {
+			secure: process.env.NODE_ENV === 'production',
+			path: '/',
+			httpOnly: false,
+			expires: new Date(Date.now() + 3600000)
+		});
+	}
+	res.view('src/views/index-mobile.ejs');
+	// const { NOT_FOUND } = res.statusCode;
+	// res.code(NOT_FOUND);
+	// return {
+	// 	statusCode: NOT_FOUND,
+	// 	errorMessage: 'Not found'
+	// };
 });
 
 app.setErrorHandler(async (err, req, res) => {
@@ -209,21 +243,21 @@ app.registerRoute('admin.page', async ctx => {
 		expires: 3600,
 		redis: ctx.redis
 	});
-	ctx.register(pointToView, {
-		engine: {
-			ejs
-		}
-	});
+	// ctx.register(pointToView, {
+	// 	engine: {
+	// 		ejs
+	// 	}
+	// });
 }, {
 	logLevel: 'warn'
 });
 
 app.registerRoute('web.page', async ctx => {
-	ctx.register(pointToView, {
-		engine: {
-			ejs
-		}
-	});
+	// ctx.register(pointToView, {
+	// 	engine: {
+	// 		ejs
+	// 	}
+	// });
 }, {
 	logLevel: 'warn'
 });
