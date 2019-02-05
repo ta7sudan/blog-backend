@@ -176,15 +176,23 @@ app.setNotFoundHandler(async function (req, res) {
 });
 
 app.setErrorHandler(async (err, req, res) => {
-	// 不管什么异常, 对外都只返回一个内容, 省得暴露
-	// 什么敏感信息, 对内打log
-	logger.error(err);
-	const { INTERNAL_ERROR } = res.statusCode;
-	res.code(INTERNAL_ERROR);
-	return {
-		statusCode: INTERNAL_ERROR,
-		errorMessage: 'Internal error'
-	};
+	if (err.name === 'UnauthorizedError') {
+		res.code(res.statusCode.TOKEN_EXPIRED);
+		return {
+			statusCode: res.statusCode.TOKEN_EXPIRED,
+			errorMessage: 'Token expired'
+		};
+	} else {
+		// 不管什么异常, 对外都只返回一个内容, 省得暴露
+		// 什么敏感信息, 对内打log
+		logger.error(err);
+		const { INTERNAL_ERROR } = res.statusCode;
+		res.code(INTERNAL_ERROR);
+		return {
+			statusCode: INTERNAL_ERROR,
+			errorMessage: 'Internal error'
+		};
+	}
 });
 
 if (process.env.NODE_ENV !== 'production') {
